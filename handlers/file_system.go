@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	_ "FileServer/dal"
 	"FileServer/utils"
 	"fmt"
-	"strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"strings"
 )
 
 const (
@@ -37,7 +37,7 @@ func DownloadFile(c *gin.Context) {
 	}
 	router := strings.Split(filepath, "/")
 	filename := router[len(router)-1]
-	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))//fmt.Sprintf("attachment; filename=%s", filename)对下载的文件重命名
+	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename)) //fmt.Sprintf("attachment; filename=%s", filename)对下载的文件重命名
 	c.Writer.Header().Add("Content-Type", "application/octet-stream")
 	c.File(Base + filepath)
 }
