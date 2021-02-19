@@ -9,8 +9,7 @@ message File {
 }
 
 message UploadRequest {
-    int32 app_id = 1;
-    File file = 2;
+    File file = 1;
 
     base.Base base = 255;
 }
@@ -22,8 +21,7 @@ message UploadResponse {
 }
 
 message DownloadRequset {
-    int32 app_id = 1;
-    string url = 2;
+    string url = 1;
 
     base.Base base = 255;
 }
