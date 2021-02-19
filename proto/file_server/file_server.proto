@@ -33,6 +33,6 @@ message DownloadResponse {
 }
 
 service FileServer {
-    rpc Upload (stream UploadRequest) returns (UploadResponse) {}
-    rpc Download (DownloadRequset) returns (stream DownloadResponse) {}
+    rpc Upload (UploadRequest) returns (UploadResponse) {}
+    rpc Download (DownloadRequset) returns (DownloadResponse) {}
 }

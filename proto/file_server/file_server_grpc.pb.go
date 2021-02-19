@@ -18,8 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FileServerClient interface {
-	Upload(ctx context.Context, opts ...grpc.CallOption) (FileServer_UploadClient, error)
-	Download(ctx context.Context, in *DownloadRequset, opts ...grpc.CallOption) (FileServer_DownloadClient, error)
+	Upload(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*UploadResponse, error)
+	Download(ctx context.Context, in *DownloadRequset, opts ...grpc.CallOption) (*DownloadResponse, error)
 }
 
 type fileServerClient struct {
@@ -30,78 +30,30 @@ func NewFileServerClient(cc grpc.ClientConnInterface) FileServerClient {
 	return &fileServerClient{cc}
 }
 
-func (c *fileServerClient) Upload(ctx context.Context, opts ...grpc.CallOption) (FileServer_UploadClient, error) {
-	stream, err := c.cc.NewStream(ctx, &FileServer_ServiceDesc.Streams[0], "/file_server.FileServer/Upload", opts...)
+func (c *fileServerClient) Upload(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*UploadResponse, error) {
+	out := new(UploadResponse)
+	err := c.cc.Invoke(ctx, "/file_server.FileServer/Upload", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &fileServerUploadClient{stream}
-	return x, nil
+	return out, nil
 }
 
-type FileServer_UploadClient interface {
-	Send(*UploadRequest) error
-	CloseAndRecv() (*UploadResponse, error)
-	grpc.ClientStream
-}
-
-type fileServerUploadClient struct {
-	grpc.ClientStream
-}
-
-func (x *fileServerUploadClient) Send(m *UploadRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *fileServerUploadClient) CloseAndRecv() (*UploadResponse, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	m := new(UploadResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *fileServerClient) Download(ctx context.Context, in *DownloadRequset, opts ...grpc.CallOption) (FileServer_DownloadClient, error) {
-	stream, err := c.cc.NewStream(ctx, &FileServer_ServiceDesc.Streams[1], "/file_server.FileServer/Download", opts...)
+func (c *fileServerClient) Download(ctx context.Context, in *DownloadRequset, opts ...grpc.CallOption) (*DownloadResponse, error) {
+	out := new(DownloadResponse)
+	err := c.cc.Invoke(ctx, "/file_server.FileServer/Download", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &fileServerDownloadClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type FileServer_DownloadClient interface {
-	Recv() (*DownloadResponse, error)
-	grpc.ClientStream
-}
-
-type fileServerDownloadClient struct {
-	grpc.ClientStream
-}
-
-func (x *fileServerDownloadClient) Recv() (*DownloadResponse, error) {
-	m := new(DownloadResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 // FileServerServer is the server API for FileServer service.
 // All implementations must embed UnimplementedFileServerServer
 // for forward compatibility
 type FileServerServer interface {
-	Upload(FileServer_UploadServer) error
-	Download(*DownloadRequset, FileServer_DownloadServer) error
+	Upload(context.Context, *UploadRequest) (*UploadResponse, error)
+	Download(context.Context, *DownloadRequset) (*DownloadResponse, error)
 	mustEmbedUnimplementedFileServerServer()
 }
 
@@ -109,11 +61,11 @@ type FileServerServer interface {
 type UnimplementedFileServerServer struct {
 }
 
-func (UnimplementedFileServerServer) Upload(FileServer_UploadServer) error {
-	return status.Errorf(codes.Unimplemented, "method Upload not implemented")
+func (UnimplementedFileServerServer) Upload(context.Context, *UploadRequest) (*UploadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Upload not implemented")
 }
-func (UnimplementedFileServerServer) Download(*DownloadRequset, FileServer_DownloadServer) error {
-	return status.Errorf(codes.Unimplemented, "method Download not implemented")
+func (UnimplementedFileServerServer) Download(context.Context, *DownloadRequset) (*DownloadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Download not implemented")
 }
 func (UnimplementedFileServerServer) mustEmbedUnimplementedFileServerServer() {}
 
@@ -128,51 +80,40 @@ func RegisterFileServerServer(s grpc.ServiceRegistrar, srv FileServerServer) {
 	s.RegisterService(&FileServer_ServiceDesc, srv)
 }
 
-func _FileServer_Upload_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(FileServerServer).Upload(&fileServerUploadServer{stream})
-}
-
-type FileServer_UploadServer interface {
-	SendAndClose(*UploadResponse) error
-	Recv() (*UploadRequest, error)
-	grpc.ServerStream
-}
-
-type fileServerUploadServer struct {
-	grpc.ServerStream
-}
-
-func (x *fileServerUploadServer) SendAndClose(m *UploadResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *fileServerUploadServer) Recv() (*UploadRequest, error) {
-	m := new(UploadRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+func _FileServer_Upload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadRequest)
+	if err := dec(in); err != nil {
 		return nil, err
 	}
-	return m, nil
-}
-
-func _FileServer_Download_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(DownloadRequset)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+	if interceptor == nil {
+		return srv.(FileServerServer).Upload(ctx, in)
 	}
-	return srv.(FileServerServer).Download(m, &fileServerDownloadServer{stream})
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/file_server.FileServer/Upload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServerServer).Upload(ctx, req.(*UploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-type FileServer_DownloadServer interface {
-	Send(*DownloadResponse) error
-	grpc.ServerStream
-}
-
-type fileServerDownloadServer struct {
-	grpc.ServerStream
-}
-
-func (x *fileServerDownloadServer) Send(m *DownloadResponse) error {
-	return x.ServerStream.SendMsg(m)
+func _FileServer_Download_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DownloadRequset)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServerServer).Download(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/file_server.FileServer/Download",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServerServer).Download(ctx, req.(*DownloadRequset))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 // FileServer_ServiceDesc is the grpc.ServiceDesc for FileServer service.
@@ -181,18 +122,16 @@ func (x *fileServerDownloadServer) Send(m *DownloadResponse) error {
 var FileServer_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "file_server.FileServer",
 	HandlerType: (*FileServerServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
+	Methods: []grpc.MethodDesc{
 		{
-			StreamName:    "Upload",
-			Handler:       _FileServer_Upload_Handler,
-			ClientStreams: true,
+			MethodName: "Upload",
+			Handler:    _FileServer_Upload_Handler,
 		},
 		{
-			StreamName:    "Download",
-			Handler:       _FileServer_Download_Handler,
-			ServerStreams: true,
+			MethodName: "Download",
+			Handler:    _FileServer_Download_Handler,
 		},
 	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/file_server/file_server.proto",
 }
