@@ -1,8 +1,9 @@
 package main
 
 import (
-	"FileServer/handlers"
-	"FileServer/middleware"
+	"file_server/handlers"
+	"file_server/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 

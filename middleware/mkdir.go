@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"FileServer/handlers"
-	"FileServer/utils"
+	"file_server/handlers"
+	"file_server/utils"
 	"fmt"
 	"os"
 	"strings"

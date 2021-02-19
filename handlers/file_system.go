@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	_ "FileServer/dal"
-	"FileServer/utils"
+	_ "file_server/dal"
+	"file_server/utils"
 	"fmt"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"strings"
 )
 
 const (
