@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	Base = "/home/ubuntu/storage/"
+	Base = "~/storage/"
 )
 
 func UploadFile(c *gin.Context) {
