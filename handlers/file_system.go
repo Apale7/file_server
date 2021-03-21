@@ -14,7 +14,7 @@ import (
 
 const (
 	Base = "/Users/apale/storage/"
-	Host = "127.0.0.1:7777"
+	Host = "http://127.0.0.1:7777"
 )
 
 type uploadParams struct {
