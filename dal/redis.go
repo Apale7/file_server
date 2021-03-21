@@ -10,6 +10,7 @@ var (
 )
 
 func init() {
+	return
 	if err := initClient(); err != nil {
 		panic(err)
 	}
